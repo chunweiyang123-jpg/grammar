@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>视频云 - 在线视频分享与下载平台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #0f0f0f;
+            color: #f1f5f9;
+            line-height: 1.5;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border-bottom: 1px solid #334155;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: #1e293b;
+            padding: 0.25rem;
+            border-radius: 40px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 32px;
+            font-weight: 500;
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+        }
+        .admin-badge {
+            background: #334155;
+            padding: 0.3rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .admin-badge span { color: #facc15; }
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.8rem;
+        }
+        .video-card {
+            background: #1e293b;
+            border-radius: 20px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #334155;
+            display: flex;
+            flex-direction: column;
+        }
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.5);
+            border-color: #475569;
+        }
+        .video-wrapper {
+            background: #000;
+            position: relative;
+            aspect-ratio: 16 / 9;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: black;
+        }
+        .video-info {
+            padding: 1rem;
+            flex: 1;
+        }
+        .video-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            word-break: break-word;
+        }
+        .video-meta {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin: 0.5rem 0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+        .btn {
+            background: #2d3a4e;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #3b82f6;
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-danger {
+            background: #dc2626;
+        }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #475569;
+        }
+        .btn-outline:hover { background: #334155; }
+        .form-card {
+            background: #1e293b;
+            border-radius: 24px;
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid #334155;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #cbd5e1;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 16px;
+            color: white;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+        }
+        button {
+            background: #3b82f6;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+            transform: scale(0.98);
+        }
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .login-card {
+            background: #1e293b;
+            padding: 2rem;
+            border-radius: 32px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid #475569;
+        }
+        .login-card h2 {
+            margin-bottom: 1.5rem;
+        }
+        .close-login {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: white;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: #1e293b;
+            border-radius: 32px;
+            color: #94a3b8;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #475569;
+            font-size: 0.8rem;
+            border-top: 1px solid #1e293b;
+            margin-top: 2rem;
+        }
+        @media (max-width: 768px) {
+            .header { flex-direction: column; text-align: center; }
+            .video-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+    // ---------- 存储 Keys ----------
+    const STORAGE_VIDEOS = 'vcloud_videos';
+    const ADMIN_PASSWORD = 'admin123';  // 管理员密码
+
+    // 获取存储的视频列表
+    function getVideos() {
+        const data = localStorage.getItem(STORAGE_VIDEOS);
+        if (data) {
+            try {
+                return JSON.parse(data);
+            } catch(e) { return []; }
+        }
+        // 示例视频
+        const sample = [
+            {
+                id: '1',
+                title: '示例视频 - 自然风光',
+                description: '一段美丽的自然风光演示视频 (MP4格式)',
+                videoBase64: '', // 无实际内容，仅占位，演示时跳过
+                fileType: 'video/mp4',
+                uploadedAt: new Date().toISOString(),
+                size: 0
+            }
+        ];
+        // 由于没有真实base64，不放实际内容，避免报错；展示时忽略无效条目
+        localStorage.setItem(STORAGE_VIDEOS, JSON.stringify([]));
+        return [];
+    }
+
+    function saveVideos(videos) {
+        localStorage.setItem(STORAGE_VIDEOS, JSON.stringify(videos));
+    }
+
+    // 全局状态
+    let currentTab = 'gallery';   // 'gallery' or 'admin'
+    let adminLoggedIn = false;
+    let showLoginModal = false;
+
+    // 渲染主入口
+    function render() {
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <header class="header">
+                <h1>🎬 视频云 · 分享与下载</h1>
+                <div class="tabs">
+                    <button class="tab-btn ${currentTab === 'gallery' ? 'active' : ''}" data-tab="gallery">📺 视频大厅</button>
+                    <button class="tab-btn ${currentTab === 'admin' ? 'active' : ''}" data-tab="admin">🔐 管理中心</button>
+                </div>
+                <div class="admin-badge">
+                    ${adminLoggedIn ? '<span>✅ 管理员已登录</span>' : '<span>⚠️ 未登录</span>'}
+                </div>
+            </header>
+            <main class="container">
+                ${currentTab === 'gallery' ? renderGallery() : renderAdminPanel()}
+            </main>
+            <footer>
+                <p>支持上传 mp4, webm, avi, mov 等常见格式 | 所有视频保存在您的浏览器中，不会上传到服务器</p>
+            </footer>
+        `;
+        attachEvents();
+        if (showLoginModal && !adminLoggedIn && currentTab === 'admin') {
+            renderLoginModal();
+        }
+    }
+
+    // 视频大厅渲染
+    function renderGallery() {
+        const videos = getVideos().filter(v => v.videoBase64 && v.videoBase64.length > 100); // 过滤空视频
+        if (videos.length === 0) {
+            return `<div class="empty-state">
+                <p>📭 暂无视频，请前往「管理中心」上传视频</p>
+            </div>`;
+        }
+        return `
+            <div class="video-grid">
+                ${videos.map(video => `
+                    <div class="video-card" data-id="${video.id}">
+                        <div class="video-wrapper">
+                            <video controls preload="metadata" src="${video.videoBase64}"></video>
+                        </div>
+                        <div class="video-info">
+                            <div class="video-title">${escapeHtml(video.title)}</div>
+                            <div class="video-meta">📅 ${new Date(video.uploadedAt).toLocaleString()} | ${formatFileSize(video.size)}</div>
+                            <div class="video-meta">${escapeHtml(video.description || '')}</div>
+                            <div class="btn-group">
+                                <a href="${video.videoBase64}" download="${escapeHtml(video.title)}.${getExtension(video.fileType)}" class="btn btn-primary">⬇️ 下载视频</a>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    // 管理员面板
+    function renderAdminPanel() {
+        if (!adminLoggedIn) {
+            return `
+                <div class="empty-state">
+                    <p>🔒 管理员需要登录才能管理视频</p>
+                    <button id="showLoginBtn" style="margin-top: 1rem;">登录管理中心</button>
+                </div>
+            `;
+        }
+        const videos = getVideos().filter(v => v.videoBase64 && v.videoBase64.length > 100);
+        return `
+            <div class="form-card">
+                <h2 style="margin-bottom: 1.2rem;">📤 上传新视频</h2>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label>视频标题 *</label>
+                        <input type="text" id="videoTitle" placeholder="例如：精彩旅行纪录片" required>
+                    </div>
+                    <div class="form-group">
+                        <label>视频描述（可选）</label>
+                        <textarea id="videoDesc" rows="2" placeholder="简单介绍一下视频内容..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>选择视频文件 * (支持 mp4, webm, avi, mov, mkv 等)</label>
+                        <input type="file" id="videoFile" accept="video/*" required>
+                        <small style="color: #94a3b8; display: block; margin-top: 0.25rem;">文件大小建议不超过 50MB，将存储为 Base64（离线可用）</small>
+                    </div>
+                    <button type="submit">上传视频</button>
+                </form>
+            </div>
+
+            <div class="form-card">
+                <h2 style="margin-bottom: 1rem;">🎞️ 已上传视频 (可删除)</h2>
+                ${videos.length === 0 ? '<p style="color:#94a3b8;">暂无视频，点击上方上传</p>' : `
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        ${videos.map(v => `
+                            <div style="background: #0f172a; border-radius: 16px; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                                <div style="flex:1;">
+                                    <strong>${escapeHtml(v.title)}</strong>
+                                    <div style="font-size:0.75rem; color:#94a3b8;">${formatFileSize(v.size)} • ${new Date(v.uploadedAt).toLocaleString()}</div>
+                                </div>
+                                <button class="btn-danger delete-video" data-id="${v.id}" style="background:#dc2626; width: auto; padding: 0.4rem 1rem;">🗑️ 删除</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `}
+            </div>
+        `;
+    }
+
+    // 登录模态框
+    function renderLoginModal() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'login-overlay';
+        modalDiv.id = 'loginModal';
+        modalDiv.innerHTML = `
+            <div class="login-card">
+                <div class="close-login" id="closeLoginBtn">&times;</div>
+                <h2>管理员登录</h2>
+                <input type="password" id="adminPassword" placeholder="请输入密码" style="margin-bottom: 1rem;">
+                <button id="submitLoginBtn">登录</button>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        document.getElementById('closeLoginBtn')?.addEventListener('click', () => {
+            modalDiv.remove();
+            showLoginModal = false;
+            if (currentTab === 'admin') {
+                currentTab = 'gallery';
+                render();
+            }
+        });
+        document.getElementById('submitLoginBtn')?.addEventListener('click', () => {
+            const pwd = document.getElementById('adminPassword').value;
+            if (pwd === ADMIN_PASSWORD) {
+                adminLoggedIn = true;
+                modalDiv.remove();
+                showLoginModal = false;
+                render();
+            } else {
+                alert('密码错误，请重试');
+            }
+        });
+    }
+
+    // 辅助函数
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function formatFileSize(bytes) {
+        if (!bytes) return '0 KB';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function getExtension(mimeType) {
+        if (mimeType.includes('mp4')) return 'mp4';
+        if (mimeType.includes('webm')) return 'webm';
+        if (mimeType.includes('avi')) return 'avi';
+        if (mimeType.includes('quicktime')) return 'mov';
+        return 'video';
+    }
+
+    // 上传视频处理
+    async function handleUpload(e) {
+        e.preventDefault();
+        const title = document.getElementById('videoTitle').value.trim();
+        const description = document.getElementById('videoDesc').value.trim();
+        const fileInput = document.getElementById('videoFile');
+        const file = fileInput.files[0];
+        if (!title || !file) {
+            alert('请填写标题并选择视频文件');
+            return;
+        }
+        if (file.size > 80 * 1024 * 1024) {
+            alert('文件过大，建议不超过 80MB，否则可能影响存储性能');
+        }
+        // 读取文件为 Base64
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const base64 = ev.target.result;
+            const newVideo = {
+                id: Date.now().toString(),
+                title: title,
+                description: description,
+                videoBase64: base64,
+                fileType: file.type,
+                size: file.size,
+                uploadedAt: new Date().toISOString()
+            };
+            const videos = getVideos().filter(v => v.videoBase64 && v.videoBase64.length > 100);
+            videos.push(newVideo);
+            saveVideos(videos);
+            alert('视频上传成功！');
+            // 重置表单
+            document.getElementById('uploadForm').reset();
+            render();  // 刷新界面
+        };
+        reader.onerror = () => alert('读取文件失败');
+        reader.readAsDataURL(file);
+    }
+
+    // 删除视频
+    function handleDelete(videoId) {
+        if (!confirm('确定要删除这个视频吗？删除后不可恢复。')) return;
+        let videos = getVideos();
+        videos = videos.filter(v => v.id !== videoId);
+        saveVideos(videos);
+        render();
+    }
+
+    // 事件绑定
+    function attachEvents() {
+        // Tab 切换
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.removeEventListener('click', tabClickHandler);
+            btn.addEventListener('click', tabClickHandler);
+        });
+        function tabClickHandler(e) {
+            const tab = e.currentTarget.dataset.tab;
+            if (tab === 'admin' && !adminLoggedIn) {
+                showLoginModal = true;
+                render();
+                return;
+            }
+            currentTab = tab;
+            render();
+        }
+
+        // 管理员面板内的上传表单和删除
+        if (currentTab === 'admin' && adminLoggedIn) {
+            const uploadForm = document.getElementById('uploadForm');
+            if (uploadForm) {
+                uploadForm.removeEventListener('submit', handleUpload);
+                uploadForm.addEventListener('submit', handleUpload);
+            }
+            document.querySelectorAll('.delete-video').forEach(btn => {
+                btn.removeEventListener('click', deleteHandler);
+                btn.addEventListener('click', deleteHandler);
+            });
+            function deleteHandler(e) {
+                const id = e.currentTarget.dataset.id;
+                if (id) handleDelete(id);
+            }
+        }
+
+        // 登录按钮（未登录时）
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        if (showLoginBtn) {
+            showLoginBtn.removeEventListener('click', () => {});
+            showLoginBtn.addEventListener('click', () => {
+                showLoginModal = true;
+                render();
+            });
+        }
+    }
+
+    // 初始渲染
+    render();
+</script>
+</body>
+</html>
